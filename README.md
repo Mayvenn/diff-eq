@@ -4,7 +4,7 @@ Pronouced: Diff-eee-cue
 
 Appends a diff message to tests that fail equality.
 
-![Screenshot in cider][images/screenshot.png]
+![Screenshot in cider][screenshot]
 
 ## Usage
 
@@ -32,3 +32,6 @@ Copyright © 2015 Mayvenn
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
+
+
+[screenshot]: images/screenshot.png
