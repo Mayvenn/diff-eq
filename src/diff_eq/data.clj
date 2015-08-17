@@ -68,9 +68,6 @@
   (diff-partition-key [_] :atom)
   (diff-similar [a b opt] (diff-atom a b opt))
 
-  String
-
-
   java.util.Set
   (diff-partition-key [_] :set)
   (diff-similar [a b opt] (diff-set a b opt))
