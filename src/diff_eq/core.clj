@@ -1,7 +1,8 @@
 (ns diff-eq.core
   (:require [clojure.test :refer :all]
-            [clojure.data :as data]
-            [clojure.pprint :as pprint]))
+            [clojure.pprint :as pprint]
+            [clojure.walk :as walk]
+            [diff-eq.data :as data]))
 
 (defn prefix-space [count string]
   (clojure.string/join (apply str "\n" (repeatedly count (constantly " ")))
@@ -15,12 +16,16 @@
 
 (defn pretty-print-diff [diffs]
   (apply str
-         (map (fn [[a b equal]]
-                (str "  - " (pprint-str a)
-                     "\n"
-                     "  + " (pprint-str b)
-                     "\n"))
-              diffs)))
+         (interpose "\n"
+                    (map (fn [[a b eq]]
+                           (str "  - " (pprint-str a)
+                                "\n"
+                                "  + " (pprint-str b)
+                                "\n"))
+                         diffs))))
+
+(defn diff [a b]
+  (data/diff a b {:eq-marker '_ :ne-marker '_}))
 
 (defonce override
   (delay
