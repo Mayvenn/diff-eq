@@ -1,4 +1,4 @@
-(defproject diff-eq "0.2.1"
+(defproject diff-eq "0.2.2"
   :description "Equality diff for humans"
   :url "http://github.com/mayvenn/diff-eq"
   :license {:name "Eclipse Public License"
