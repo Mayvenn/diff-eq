@@ -19,7 +19,7 @@ but it suffers from two problems:
 Add this to your lein profile:
 
 ```clojure
-{:user {:dependencies [[diff-eq "0.1.0"]]
+{:user {:dependencies [[diff-eq "0.2.2"]]
         :injections [(require 'diff-eq.core)
                      (diff-eq.core/diff!)]}}
 ```
@@ -29,7 +29,7 @@ Or your `project.clj`:
 ```clojure
 (defproject ...
 
-  :profiles {:dev {:dependencies [[diff-eq "0.1.0"]]
+  :profiles {:dev {:dependencies [[diff-eq "0.2.2"]]
                    :injections [(require 'diff-eq.core)
                                 (diff-eq.core/diff!)]}})
 ```
