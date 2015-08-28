@@ -17,21 +17,34 @@
      (not-empty (set/difference b a))
      (not-empty (set/intersection a b))]))
 
+(defn use-marker-if-equal [value marker]
+  (cond
+    (empty? value) marker
+    (every? #{marker} value) marker
+    :else value))
+
 (defn diff-sequential [a b {:keys [eq-marker ne-marker] :as options}]
-  (let [diffs (map #(diff %1 %2 options) a b)
+  (let [remove-marker ::marker
+        padding (- (max (count a) (count b))
+                   (min (count a) (count b)))
+        a (lazy-cat a (repeat padding remove-marker))
+        b (lazy-cat b (repeat padding remove-marker))
+        diffs (map #(diff %1 %2 options) a b)
         eq (map third diffs)
         equal-elements (map = a b)
-        a' (map #(if %2 eq-marker %1)
-                (map first diffs)
-                equal-elements)
-        b' (map #(if %2 eq-marker %1)
-                (map second diffs)
-                equal-elements)
+        a' (->> (map #(if %2 eq-marker %1)
+                     (map first diffs)
+                     equal-elements)
+                (filter (complement #{remove-marker})))
+        b' (->> (map #(if %2 eq-marker %1)
+                     (map second diffs)
+                     equal-elements)
+                (filter (complement #{remove-marker})))
         eq' (map #(if %2 %1 ne-marker)
                  eq
                  equal-elements)]
-    [(not-empty (vec a'))
-     (not-empty (vec b'))
+    [(use-marker-if-equal (not-empty (vec a')) ne-marker)
+     (use-marker-if-equal (not-empty (vec b')) ne-marker)
      (not-empty (vec eq'))]))
 
 (defn ^:private diff-associative-key [a b key options]

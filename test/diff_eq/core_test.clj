@@ -47,6 +47,18 @@
       (text "  - [1 _ 3]"
             "  + [3 _ 1]")
 
+      [:x :y :z] [:x :z]
+      (text "  - [_ :y :z]"
+            "  + [_ :z]")
+
+      [:x :y :z] [:x :z :a]
+      (text "  - [_ :y :z]"
+            "  + [_ :z :a]")
+
+      [[1 2] [3 4]] [[1 2] [3 5]]
+      (text "  - [_ [_ 4]]"
+            "  + [_ [_ 5]]")
+
       (map inc [1 2 3]) (map inc [3 2 1])
       (text "  - [2 _ 4]"
             "  + [4 _ 2]")
@@ -67,3 +79,17 @@
       [{:a :b} {:c :e}]
       (text "  - [_ {:c :d}]"
             "  + [_ {:c :e}]"))))
+
+(deftest pretty-hides-deletions-if-not-needed
+  (are [a b expected] (= (pretty-print-diff [(diff a b)]) expected)
+    [{:amount 53.4}]
+    [{:amount 53.4}
+     {:amount 53.4}]
+    (text "  + [_ {:amount 53.4}]")))
+
+(deftest pretty-hides-additions-if-not-needed
+  (are [a b expected] (= (pretty-print-diff [(diff a b)]) expected)
+    [{:amount 53.4}
+     {:amount 53.4}]
+    [{:amount 53.4}]
+    (text "  - [_ {:amount 53.4}]")))
