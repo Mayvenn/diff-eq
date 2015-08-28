@@ -40,7 +40,7 @@ And then `lein deps`.
 
 Copyright © 2015 Mayvenn
 
-Distributed under the Eclipse Public License either version 1.0.
+Distributed under the Eclipse Public License version 1.0.
 
 
 [screenshot]: images/screenshot.png
