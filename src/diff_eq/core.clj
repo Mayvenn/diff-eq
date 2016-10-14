@@ -1,4 +1,4 @@
-4 (ns diff-eq.core
+(ns diff-eq.core
     (:require [clojure.test :refer :all]
               [clojure.pprint :as pprint]
               [clojure.walk :as walk]
@@ -39,7 +39,7 @@
                         :expected '~form, :actual (cons ~pred values#)})
             (binding [*testing-contexts* (conj *testing-contexts*
                                                (str "\n\nDiff:\n"
-                                                    (pretty-print-diff (map #(data/diff (first values#) %)
+                                                    (pretty-print-diff (map #(diff (first values#) %)
                                                                             (rest values#)))))]
               (do-report {:type :fail, :message ~msg,
                           :expected '~form, :actual (list '~'not (cons '~pred values#))})))
