@@ -1,7 +1,9 @@
 (ns diff-eq.data
-  (:require [clojure.set :as set]))
+  (:require [clojure.set :as set]
+            [clojure.walk :as walk]))
 
 (declare diff)
+(declare num-differences)
 (def ^:private third (comp first next next))
 
 (defn diff-atom
@@ -10,11 +12,32 @@
     [ne-marker ne-marker a]
     [a b eq-marker]))
 
+(defn ^:private count-occurrences [needle-fn tree]
+  (let [counter (atom 0)]
+    (walk/prewalk (fn [x]
+                 (when (needle-fn x)
+                   (swap! counter inc))
+                 x)
+               tree)
+    @counter))
+
+(defn ^:private minimal-diff
+  "Returns the smallest diff of x to one of ys."
+  [x ys options]
+  (let [number-of-differences last]
+    (ffirst (sort-by number-of-differences
+                    (remove (comp zero? number-of-differences)
+                            (map (juxt #(diff x % options) #(num-differences x %)) ys))))))
+
 (defn ^:private diff-set [a b options]
   (let [a (set a)
-        b (set b)]
-    [(not-empty (set/difference a b))
-     (not-empty (set/difference b a))
+        b (set b)
+        a-only (not-empty (set/difference a b))
+        b-only (not-empty (set/difference b a))]
+    [(when a-only
+       (set (map #(first (minimal-diff % b-only options)) a-only)))
+     (when b-only
+       (set (map #(first (minimal-diff % a-only options)) b-only)))
      (not-empty (set/intersection a b))]))
 
 (defn use-marker-if-equal [value marker]
@@ -120,3 +143,14 @@
      (if (= (diff-partition-key a) (diff-partition-key b))
        (diff-similar a b options)
        (diff-atom a b options)))))
+
+(defn ^:private num-differences
+  "Returns the number of modifications required to change a to b."
+  [a b]
+  (let [marker ::==
+        [a-only b-only] (diff a b {:eq-marker marker})]
+    (if (or a-only b-only)
+      (+
+       (count-occurrences (partial not= marker) a-only)
+       (count-occurrences (partial not= marker) b-only))
+      0)))

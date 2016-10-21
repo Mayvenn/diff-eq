@@ -41,6 +41,25 @@
     (text "  - {:a {:b 1}}"
           "  + {:a {:b 2}}")))
 
+(deftest pretty-diff-sets
+  (testing "Emits diff of sets to the closest-matching elements recursively"
+    (are [a b expected] (= (pretty-print-diff [(diff a b)]) expected)
+      #{1 2 3} #{4 2 1}
+      (text "  - #{3}"
+            "  + #{4}")
+
+      #{[1 2 3]} #{[1 2 4]}
+      (text "  - #{[_ _ 3]}"
+            "  + #{[_ _ 4]}")
+
+      #{{:a 1} {:b 2 :c 4}} #{{:a 1} {:b 3 :c 4}}
+      (text "  - #{{:b 2}}"
+            "  + #{{:b 3}}")
+
+      #{#{1 2} #{2 3} #{3 4}} #{#{1 2} #{2 4} #{3 4}}
+      (text "  - #{#{3}}"
+            "  + #{#{4}}"))))
+
 (deftest pretty-diff-sequences
   (testing "Emits underscores instead of nils for equal elements"
     (are [a b expected] (= (pretty-print-diff [(diff a b)]) expected)
