@@ -109,7 +109,10 @@
     [{:amount 53.4}]
     [{:amount 53.4}
      {:amount 53.4}]
-    (text "  + [_ {:amount 53.4}]")))
+    (text "  + [_ {:amount 53.4}]")
+
+    #{1} #{nil 1}
+    (text "  + #{nil}")))
 
 (deftest pretty-hides-additions-if-not-needed
   (are [a b expected] (= (pretty-print-diff [(diff a b)]) expected)
