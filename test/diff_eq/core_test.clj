@@ -1,6 +1,7 @@
 (ns diff-eq.core-test
   (:require [diff-eq.core :refer :all]
-            [clojure.test :refer :all]))
+            [clojure.test :refer :all])
+  (:import java.util.ArrayList))
 
 (defn text [& lines]
   (str (apply str (interpose "\n" lines))
