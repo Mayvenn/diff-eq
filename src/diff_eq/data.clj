@@ -29,25 +29,31 @@
                     (remove (comp zero? number-of-differences)
                             (map (juxt #(diff x % options) #(num-differences x %)) ys))))))
 
-(defn ^:private diff-set [a b options]
+(defn ^:private diff-set [a b {:keys [eq-marker] :as options}]
   (let [a (set a)
         b (set b)
         a-only (not-empty (set/difference a b))
-        b-only (not-empty (set/difference b a))]
-    [(when a-only
-       (set (map #(first (minimal-diff % b-only options)) a-only)))
-     (when b-only
-       (set (map #(first (minimal-diff % a-only options)) b-only)))
+        b-only (not-empty (set/difference b a))
+
+        use-marker-if-equal (fn use-marker-if-equal [value]
+                              (let [value (set value)]
+                                (if (and (or a-only b-only) (empty? value))
+                                  eq-marker
+                                  value)))]
+    [(use-marker-if-equal (map #(first (minimal-diff % b-only options)) a-only))
+     (use-marker-if-equal (map #(first (minimal-diff % a-only options)) b-only))
      (not-empty (set/intersection a b))]))
 
-(defn use-marker-if-equal [value marker]
-  (cond
-    (empty? value) marker
-    (every? #{marker} value) marker
-    :else value))
+
 
 (defn diff-sequential [a b {:keys [eq-marker ne-marker] :as options}]
-  (let [remove-marker ::marker
+  (let [use-marker-if-equal (fn use-marker-if-equal [value marker]
+                              (cond
+                                (empty? value) marker
+                                (every? #{marker} value) marker
+                                :else value))
+
+        remove-marker ::marker
         padding (- (max (count a) (count b))
                    (min (count a) (count b)))
         a (lazy-cat a (repeat padding remove-marker))
