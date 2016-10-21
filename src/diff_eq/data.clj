@@ -98,28 +98,28 @@
         [nil nil nil] keys)))
 
 (defprotocol Diffable
-  (diff-partition-key [_])
+  (diff-partition-key [_ opt])
   (diff-similar [a b opt]))
 
 (extend-protocol Diffable
   Object
-  (diff-partition-key [_] :atom)
+  (diff-partition-key [_ _] :atom)
   (diff-similar [a b opt] (diff-atom a b opt))
 
   nil
-  (diff-partition-key [_] :atom)
+  (diff-partition-key [_ _] :atom)
   (diff-similar [a b opt] (diff-atom a b opt))
 
   java.util.Set
-  (diff-partition-key [_] :set)
+  (diff-partition-key [_ _] :set)
   (diff-similar [a b opt] (diff-set a b opt))
 
   java.util.List
-  (diff-partition-key [_] :sequential)
+  (diff-partition-key [_ _] :sequential)
   (diff-similar [a b opt] (diff-sequential a b opt))
 
   java.util.Map
-  (diff-partition-key [_] :map)
+  (diff-partition-key [_ _] :map)
   (diff-similar [a b opt] (diff-associative a b (set/union (keys a) (keys b)) opt)))
 
 (defn diff
@@ -146,7 +146,7 @@
   ([a b {:keys [eq-marker ne-marker] :as options}]
    (if (= a b)
      [nil nil a]
-     (if (= (diff-partition-key a) (diff-partition-key b))
+     (if (= (diff-partition-key a options) (diff-partition-key b options))
        (diff-similar a b options)
        (diff-atom a b options)))))
 
