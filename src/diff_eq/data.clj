@@ -45,7 +45,6 @@
      (not-empty (set/intersection a b))]))
 
 
-
 (defn diff-sequential [a b {:keys [eq-marker ne-marker] :as options}]
   (let [use-marker-if-equal (fn use-marker-if-equal [value marker]
                               (cond
@@ -97,6 +96,32 @@
                (diff-associative-key a b key options)))
         [nil nil nil] keys)))
 
+(defn with-printer [[a b e] f]
+  [(if (instance? clojure.lang.IObj a)
+     (with-meta a {:diff-eq/printer f})
+     a)
+   (if (instance? clojure.lang.IObj b)
+     (with-meta b {:diff-eq/printer f})
+     b)
+   (if (instance? clojure.lang.IObj e)
+     (with-meta e {:diff-eq/printer f})
+     e)])
+
+(defn diff-strings-by-line-pretty-print [lines]
+  (doseq [[line-offset line] (map-indexed vector lines)]
+    (when (string? line)
+      (println (format "Line %d: %s" (inc line-offset) (pr-str line))))))
+
+(defn diff-strings-by-line [a b options]
+  (let [a-lines (.split a "\n")
+        b-lines (.split b "\n")]
+    (with-printer
+      (if (or (= 1 (count a-lines))
+              (= 1 (count b-lines)))
+        (diff-atom a b options)
+        (diff-sequential a-lines b-lines options))
+      diff-strings-by-line-pretty-print)))
+
 (defprotocol Diffable
   (diff-partition-key [_ opt])
   (diff-similar [a b opt]))
@@ -109,6 +134,14 @@
   nil
   (diff-partition-key [_ _] :atom)
   (diff-similar [a b opt] (diff-atom a b opt))
+
+  java.lang.String
+  (diff-partition-key [_ {:keys [diff-strings?]}]
+    (if diff-strings? :string :atom))
+  (diff-similar [a b {:keys [diff-strings?] :as opt}]
+    (if diff-strings?
+      (diff-strings-by-line a b opt)
+      (diff-atom a b opt)))
 
   java.util.Set
   (diff-partition-key [_ _] :set)
@@ -135,6 +168,7 @@
   The third argument is a map of options:
     :eq-marker - The value to use for sequences when elements are equal.
     :ne-marker - The value to use for sequences when elements are not equal.
+    :diff-strings? - Whether or not strings should be diffed by line. Defaults to false.
 
   Examples:
 
@@ -143,12 +177,15 @@
 
   Diff for other types can be added by extending Diffable to it."
   ([a b] (diff a b {}))
-  ([a b {:keys [eq-marker ne-marker] :as options}]
-   (if (= a b)
-     [nil nil a]
-     (if (= (diff-partition-key a options) (diff-partition-key b options))
-       (diff-similar a b options)
-       (diff-atom a b options)))))
+  ([a b {:keys [eq-marker ne-marker diff-strings?]
+         :or {diff-strings? false}
+         :as options}]
+   (let [options (assoc options :diff-strings? diff-strings?)]
+     (if (= a b)
+       [nil nil a]
+       (if (= (diff-partition-key a options) (diff-partition-key b options))
+         (diff-similar a b options)
+         (diff-atom a b options))))))
 
 (defn ^:private num-differences
   "Returns the number of modifications required to change a to b."

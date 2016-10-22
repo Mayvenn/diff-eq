@@ -31,6 +31,16 @@
     (text "  - \"hello\""
           "  + 1")))
 
+(deftest pretty-diff-strings-by-lines
+  (are [a b expected] (= (pretty-print-diff [(diff a b {:diff-strings? true})]) expected)
+    "a\nb\nc" "a\nb\nd"
+    (text "  - Line 3: \"c\""
+          "  + Line 3: \"d\"")
+
+    "a\nb\nc\ne" "a\nb\nd\ne"
+    (text "  - Line 3: \"c\""
+          "  + Line 3: \"d\"")))
+
 (deftest pretty-diff-maps
   (are [a b expected] (= (pretty-print-diff [(diff a b)]) expected)
     {:a 1 :b 3} {:b 3 :c 4}

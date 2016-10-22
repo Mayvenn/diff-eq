@@ -4,15 +4,17 @@
               [clojure.walk :as walk]
               [diff-eq.data :as data]))
 
+(def global-options (atom {}))
+
 (defn prefix-space [count string]
   (clojure.string/join (apply str "\n" (repeatedly count (constantly " ")))
                        (clojure.string/split string #"\n")))
 
 (defn pprint-str [value]
   (prefix-space
-   4
-   (with-out-str
-     (pprint/pprint value))))
+   4 (with-out-str (if-let [printer (:diff-eq/printer (meta value))]
+       (printer value)
+       (pprint/pprint value)))))
 
 (defn pretty-print-diff [diffs]
   (apply str
@@ -24,8 +26,10 @@
                                   (str "  + " (pprint-str b) "\n"))))
                          diffs))))
 
-(defn diff [a b]
-  (data/diff a b {:eq-marker '_ :ne-marker '_}))
+(defn diff
+  ([a b] (diff a b {}))
+  ([a b {:keys [diff-strings?] :or {diff-strings? false}}]
+   (data/diff a b {:eq-marker '_ :ne-marker '_ :diff-strings? diff-strings?})))
 
 (defonce override
   (delay
@@ -39,11 +43,14 @@
                         :expected '~form, :actual (cons ~pred values#)})
             (binding [*testing-contexts* (conj *testing-contexts*
                                                (str "\n\nDiff:\n"
-                                                    (pretty-print-diff (map #(diff (first values#) %)
+                                                    (pretty-print-diff (map #(diff (first values#) % @global-options)
                                                                             (rest values#)))))]
               (do-report {:type :fail, :message ~msg,
                           :expected '~form, :actual (list '~'not (cons '~pred values#))})))
           result#)))))
 
-(defn diff! []
-  @override)
+(defn diff!
+  ([] (diff! {}))
+  ([options]
+   (reset! global-options options)
+   @override))
