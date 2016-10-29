@@ -24,10 +24,14 @@
 (defn ^:private minimal-diff
   "Returns the smallest diff of x to one of ys."
   [x ys options]
-  (let [number-of-differences last]
-    (ffirst (sort-by number-of-differences
-                    (remove (comp zero? number-of-differences)
-                            (map (juxt #(diff x % options) #(num-differences x %)) ys))))))
+  (let [number-of-differences last
+        diff-of-x (comp first first first)]
+    (or
+     (diff-of-x
+      (sort-by number-of-differences
+               (map (juxt #(diff x % options) #(num-differences x %)) ys)))
+     ;; otherwise we found no minimal diff - just show the entire value
+     x)))
 
 (defn ^:private diff-set [a b {:keys [eq-marker] :as options}]
   (let [a (set a)
@@ -40,10 +44,9 @@
                                 (if (and (or a-only b-only) (empty? value))
                                   eq-marker
                                   value)))]
-    [(use-marker-if-equal (map #(first (minimal-diff % b-only options)) a-only))
-     (use-marker-if-equal (map #(first (minimal-diff % a-only options)) b-only))
+    [(use-marker-if-equal (map #(minimal-diff % b-only options) a-only))
+     (use-marker-if-equal (map #(minimal-diff % a-only options) b-only))
      (not-empty (set/intersection a b))]))
-
 
 (defn diff-sequential [a b {:keys [eq-marker ne-marker] :as options}]
   (let [use-marker-if-equal (fn use-marker-if-equal [value marker]
