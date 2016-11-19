@@ -33,9 +33,25 @@
 
 (deftest pretty-diff-strings-by-lines
   (are [a b expected] (= (pretty-print-diff [(diff a b {:diff-strings? true})]) expected)
+    "abc" "def"
+    (text "  - \"abc\""
+          "  + \"def\"")
+
+    "abc\n" "def\n"
+    (text "  - \"abc\\n\""
+          "  + \"def\\n\"")
+
     "a\nb\nc" "a\nb\nd"
     (text "  - Line 3: \"c\""
           "  + Line 3: \"d\"")
+
+    "a\nb\nc" "e\nf\ng"
+    (text "  - Line 1: \"a\""
+          "    Line 2: \"b\""
+          "    Line 3: \"c\""
+          "  + Line 1: \"e\""
+          "    Line 2: \"f\""
+          "    Line 3: \"g\"")
 
     "a\nb\nc\ne" "a\nb\nd\ne"
     (text "  - Line 3: \"c\""

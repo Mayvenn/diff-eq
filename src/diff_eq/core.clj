@@ -28,7 +28,7 @@
 
 (defn diff
   ([a b] (diff a b {}))
-  ([a b {:keys [diff-strings?] :or {diff-strings? false}}]
+  ([a b {:keys [diff-strings?] :or {diff-strings? (and (string? a) (string? b))}}]
    (data/diff a b {:eq-marker '_ :ne-marker '_ :diff-strings? diff-strings?})))
 
 (defonce override
